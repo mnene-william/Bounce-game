@@ -7,6 +7,7 @@ from pygame.locals import(
     K_RIGHT,
     K_ESCAPE,
     KEYDOWN,
+    KEYUP,
     QUIT
 )
 
@@ -15,6 +16,12 @@ pygame.init()
 
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 700
+GRAVITY = 1
+
+JUMP_STRENGTH = -12
+
+GROUND_HEIGHT = 25
+ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), SCREEN_WIDTH, GROUND_HEIGHT)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -28,32 +35,46 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((0, 0, 255)) 
         self.rect = self.surf.get_rect()
 
-        self.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2) 
+        self.rect.x = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2) 
+        self.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
 
+        self.change_in_x = 0
+        self.change_in_y = 0
+        self.on_the_ground = False
+    
+    def gravity_force(self):
+        self.change_in_y += GRAVITY
+    
+    def jump(self):
+        if self.on_the_ground:
+            self.change_in_y = JUMP_STRENGTH
+            self.on_the_ground = False
 
- 
+    
+
     def update(self, pressed_keys):
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0, -5)
+        
+        self.gravity_force()
 
-        if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 5)
+        self.rect.y += self.change_in_y
 
-        if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-5, 0)
-
-        if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(5, 0)
+        self.rect.x += self.change_in_x
 
 
         if self.rect.left < 0:
             self.rect.left = 0
+            self.change_in_x = 0
         if self.rect.right > SCREEN_WIDTH:
             self.rect.right = SCREEN_WIDTH
-        if self.rect.top < 0:
-            self.rect.top = 0
-        if self.rect.bottom > SCREEN_HEIGHT:
-            self.rect.bottom = SCREEN_HEIGHT
+            self.change_in_x = 0
+
+        if self.rect.colliderect(ground_rect):
+            if self.change_in_y > 0:
+
+                self.rect.bottom = ground_rect.top
+                self.change_in_y = 0
+                self.on_the_ground = True
+
 
 player = Player()
 

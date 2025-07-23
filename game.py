@@ -20,7 +20,7 @@ GRAVITY = 1
 PLAYER_SPEED = 4
 
 
-JUMP_STRENGTH = -16
+JUMP_STRENGTH = -20
 
 GROUND_HEIGHT = 25
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), SCREEN_WIDTH, GROUND_HEIGHT)
@@ -54,7 +54,7 @@ class Player(pygame.sprite.Sprite):
 
     
 
-    def update(self):
+    def update(self, platforms_group):
         
         self.gravity_force()
 
@@ -70,12 +70,29 @@ class Player(pygame.sprite.Sprite):
             self.rect.right = SCREEN_WIDTH
             self.change_in_x = 0
 
+
+        self.on_the_ground = False
+
         if self.rect.colliderect(ground_rect):
             if self.change_in_y > 0:
 
                 self.rect.bottom = ground_rect.top
                 self.change_in_y = 0
                 self.on_the_ground = True
+
+
+        on_the_platform_list = pygame.sprite.spritecollide(self, platforms_group, False)
+
+        for platform in on_the_platform_list:
+
+            if self.change_in_y > 0 and self.rect.bottom <= platform.rect.bottom + 4:
+                self.rect.bottom = platform.rect.top
+                self.change_in_y = 0
+                self.on_the_ground = True
+
+
+
+
 
     def left_movement(self):
         self.change_in_x = -PLAYER_SPEED
@@ -89,11 +106,38 @@ class Player(pygame.sprite.Sprite):
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height):
 
-        super(Platform)
+        super(Platform, self). __init__()
+
+        self.image = pygame.Surface((width, height))
+        self.image.fill((150, 75, 0)) 
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x 
+
+        self.rect.y = y 
+
 
 all_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
+
+platforms = pygame.sprite.Group()
+
+platform1 = Platform(100, SCREEN_HEIGHT - 100, 150, 20) 
+platform2 = Platform(SCREEN_WIDTH - 250, SCREEN_HEIGHT - 200, 200, 20) 
+platform3 = Platform(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT - 300, 150, 20) 
+platform4 = Platform(50, SCREEN_HEIGHT - 400, 100, 20)
+platform5 = Platform(SCREEN_WIDTH - 150, SCREEN_HEIGHT - 450, 100, 20)
+
+platforms.add(platform1)
+platforms.add(platform2)
+platforms.add(platform3)
+platforms.add(platform4)
+platforms.add(platform5)
+
+for platform in platforms:
+    all_sprites.add(platform)
 
 clock = pygame.time.Clock()
 FPS = 60
@@ -130,7 +174,7 @@ while running:
             elif event.key == K_RIGHT and player.change_in_x > 0:
                 player.stop_movement()
 
-    all_sprites.update()
+    player.update(platforms)
             
 
     screen.fill((135, 206, 235)) 

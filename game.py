@@ -25,6 +25,8 @@ JUMP_STRENGTH = -20
 GROUND_HEIGHT = 25
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), SCREEN_WIDTH, GROUND_HEIGHT)
 
+movement_on_x = 0
+
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption("Bounce game") 
@@ -43,6 +45,7 @@ class Player(pygame.sprite.Sprite):
         self.change_in_x = 0
         self.change_in_y = 0
         self.on_the_ground = False
+
     
     def gravity_force(self):
         self.change_in_y += GRAVITY
@@ -55,12 +58,20 @@ class Player(pygame.sprite.Sprite):
     
 
     def update(self, platforms_group):
+        global movement_on_x
         
         self.gravity_force()
 
         self.rect.y += self.change_in_y
 
-        self.rect.x += self.change_in_x
+        if self.change_in_x > 0 and self.rect.right > SCREEN_WIDTH - 200:
+            movement_on_x -= self.change_in_x
+        elif self.change_in_x < 0 and self.rect.left < 200:
+            movement_on_x -= self.change_in_x
+        else:
+            self.rect.x += self.change_in_x
+
+        
 
 
         if self.rect.left < 0:
@@ -85,7 +96,7 @@ class Player(pygame.sprite.Sprite):
 
         for platform in on_the_platform_list:
 
-            if self.change_in_y > 0 and self.rect.bottom <= platform.rect.bottom + 4:
+            if self.change_in_y > 0 and self.rect.bottom <= platform.rect.bottom :
                 self.rect.bottom = platform.rect.top
                 self.change_in_y = 0
                 self.on_the_ground = True
@@ -117,6 +128,15 @@ class Platform(pygame.sprite.Sprite):
 
         self.rect.y = y 
 
+        self.start_x = x
+
+    def update(self, movement_on_x):
+
+        self.rect.x = self.start_x + movement_on_x
+        
+
+
+
 
 all_sprites = pygame.sprite.Group()
 player = Player()
@@ -138,6 +158,8 @@ platforms.add(platform5)
 
 for platform in platforms:
     all_sprites.add(platform)
+
+ground_start_x = ground_rect.x
 
 clock = pygame.time.Clock()
 FPS = 60
@@ -176,10 +198,14 @@ while running:
 
     player.update(platforms)
             
+    for platform in platforms:
+        platform.update(movement_on_x)
 
     screen.fill((135, 206, 235)) 
+
+    new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
      
-    pygame.draw.rect(screen, (0, 255, 0), ground_rect)
+    pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)
 
     all_sprites.draw(screen)
 

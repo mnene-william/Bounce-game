@@ -1,4 +1,5 @@
 import pygame
+import random
 
 from pygame.locals import(
     K_UP,
@@ -23,7 +24,8 @@ PLAYER_SPEED = 4
 JUMP_STRENGTH = -20
 
 GROUND_HEIGHT = 25
-ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), SCREEN_WIDTH, GROUND_HEIGHT)
+GROUND_WIDTH = SCREEN_WIDTH * 7
+ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
 movement_on_x = 0
 
@@ -133,14 +135,10 @@ class Platform(pygame.sprite.Sprite):
     def update(self, movement_on_x):
 
         self.rect.x = self.start_x + movement_on_x
+
+
         
-
-
-
-
 all_sprites = pygame.sprite.Group()
-player = Player()
-all_sprites.add(player)
 
 platforms = pygame.sprite.Group()
 
@@ -149,17 +147,27 @@ platform2 = Platform(SCREEN_WIDTH - 250, SCREEN_HEIGHT - 200, 200, 20)
 platform3 = Platform(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT - 300, 150, 20) 
 platform4 = Platform(50, SCREEN_HEIGHT - 400, 100, 20)
 platform5 = Platform(SCREEN_WIDTH - 150, SCREEN_HEIGHT - 450, 100, 20)
+platform6 = Platform(SCREEN_WIDTH + 100, SCREEN_HEIGHT - 150, 150, 20) 
+platform7 = Platform(SCREEN_WIDTH + 300, SCREEN_HEIGHT - 250, 100, 20) 
+platform8 = Platform(SCREEN_WIDTH + 500, SCREEN_HEIGHT - 350, 180, 20) 
 
 platforms.add(platform1)
 platforms.add(platform2)
 platforms.add(platform3)
 platforms.add(platform4)
 platforms.add(platform5)
+platforms.add(platform6)
+platforms.add(platform7)
+platforms.add(platform8)
 
 for platform in platforms:
     all_sprites.add(platform)
 
+player = Player()
+all_sprites.add(player)
+
 ground_start_x = ground_rect.x
+
 
 clock = pygame.time.Clock()
 FPS = 60
@@ -196,10 +204,15 @@ while running:
             elif event.key == K_RIGHT and player.change_in_x > 0:
                 player.stop_movement()
 
+
+        
+
+
     player.update(platforms)
-            
+
     for platform in platforms:
         platform.update(movement_on_x)
+    
 
     screen.fill((135, 206, 235)) 
 

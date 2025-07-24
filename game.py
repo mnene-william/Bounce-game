@@ -137,10 +137,34 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = self.start_x + movement_on_x
 
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height, speed):
+        super(Enemy, self). __init__()
+        self.image = pygame.Surface((width, height))
+        self.image.fill((255, 0 , 0))
+        self.rect = self.image.get_rect()
+
+        self.initial_spawn_on_x = x
+        self.rect.x = x
+        self.rect.y = y
+
+        self.speed = speed
+
+    def update(self, movement_on_x):
+        self.initial_spawn_on_x -= self.speed
+
+        self.rect.x = self.initial_spawn_on_x + movement_on_x
+
+        if self.rect.right < 0:
+            self.kill()
+
+
         
 all_sprites = pygame.sprite.Group()
 
 platforms = pygame.sprite.Group()
+
+enemies = pygame.sprite.Group()
 
 platform1 = Platform(100, SCREEN_HEIGHT - 100, 150, 20) 
 platform2 = Platform(SCREEN_WIDTH - 250, SCREEN_HEIGHT - 200, 200, 20) 
@@ -163,6 +187,15 @@ platforms.add(platform8)
 for platform in platforms:
     all_sprites.add(platform)
 
+enemy1 = Enemy(SCREEN_WIDTH + 200, (SCREEN_HEIGHT - GROUND_HEIGHT - 30), 30, 30, speed=3)
+enemies.add(enemy1)
+all_sprites.add(enemy1)
+
+enemy2 = Enemy(platform6.start_x + 100,(platform6.rect.top - 30), 30, 30, speed=3)
+enemies.add(enemy2)
+all_sprites.add(enemy2)
+
+
 player = Player()
 all_sprites.add(player)
 
@@ -171,6 +204,10 @@ ground_start_x = ground_rect.x
 
 clock = pygame.time.Clock()
 FPS = 60
+
+
+Enemy_spawn = pygame.USEREVENT + 1
+pygame.time.set_timer(Enemy_spawn, 1500)
 
 
 
@@ -204,14 +241,44 @@ while running:
             elif event.key == K_RIGHT and player.change_in_x > 0:
                 player.stop_movement()
 
+        elif event.type == Enemy_spawn:
+            enemy_width = random.randint(25, 40)
+            enemy_height = random.randint(25, 40)
+            enemy_speed = random.randint(2, 4)
 
-        
+            spawn_x = SCREEN_WIDTH + random.randint(50, 200)
+
+            ground_spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_height
+
+            platform_spawn_y = None
+
+            if platforms:
+                random_platform = random.choice(platforms.sprites())
+
+                platform_spawn_y = random_platform.rect.top - enemy_height 
+                platform_spawn_x = random_platform.start_x + random.randint(0, random_platform.rect.width - enemy_width)
+
+
+                if random.random() < 0.7 and platforms:
+                    new_enemy = Enemy(platform_spawn_x, platform_spawn_y, enemy_width, enemy_height, enemy_speed)
+                else:
+                    new_enemy = Enemy(spawn_x, ground_spawn_y, enemy_width, enemy_height, enemy_speed)
+
+
+                enemies.add(new_enemy)
+                all_sprites.add(new_enemy)
+
+
 
 
     player.update(platforms)
 
     for platform in platforms:
         platform.update(movement_on_x)
+
+
+    for enemy in enemies:
+        enemy.update(movement_on_x)
     
 
     screen.fill((135, 206, 235)) 

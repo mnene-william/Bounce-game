@@ -8,11 +8,11 @@ from pygame.locals import(
     K_RIGHT,
     K_ESCAPE,
     K_SPACE,
+    K_r, # For restart
     KEYDOWN,
     KEYUP,
     QUIT
 )
-
 
 pygame.init()
 
@@ -20,46 +20,53 @@ SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 700
 GRAVITY = 1
 PLAYER_SPEED = 4
-
-
 JUMP_STRENGTH = -20
 
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
-
-GAME_STATE_MENU = 0
-GAME_STATE_PLAYING = 1
-GAME_STATE_OVER = 2
-
-current_game_state = GAME_STATE_MENU
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
-movement_on_x = 0
+movement_on_x = 0 # This will control the camera/world shift
+
+# Game States
+GAME_STATE_MENU = 0
+GAME_STATE_PLAYING = 1
+GAME_STATE_GAME_OVER = 2 # Renamed for clarity and consistency
+
+# Initial game state
+current_game_state = GAME_STATE_MENU
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
 pygame.display.set_caption("Bounce game") 
 
-
-def menu_screen():
-    screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 74)
-    text = font.render("Bounce Game", True, (255, 255, 255))
+# --- Game State Drawing Functions ---
+def draw_menu_screen(): # Renamed to draw_menu_screen for consistency
+    screen.fill((0, 0, 0)) # Black background for menu
+    font = pygame.font.Font(None, 74) # Using None for default system font
+    text = font.render("Bounce Game", True, (255, 255, 255)) # White text
     text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
     screen.blit(text, text_rect)
 
-def game_over_screen():
-    screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 74)
-    text = font.render("GAME OVER", True, (255, 0, 0))
-    text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
-    screen.blit(text, text_rect)
-
-    small_font = pygame.font.Font(None, 36)
-    instruction_text = small_font.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
+    font_small = pygame.font.Font(None, 36) # Using None for default system font
+    instruction_text = font_small.render("Press SPACE to Start", True, (255, 255, 255)) # Added instruction text
     instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
     screen.blit(instruction_text, instruction_rect)
 
+    pygame.display.flip()
+
+def draw_game_over_screen(): # Renamed to draw_game_over_screen for consistency
+    screen.fill((0, 0, 0)) # Black background
+    font = pygame.font.Font(None, 74) # Using None for default system font
+    text = font.render("GAME OVER", True, (255, 0, 0)) # Red text
+    text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
+    screen.blit(text, text_rect)
+
+    font_small = pygame.font.Font(None, 36) # Using None for default system font
+    instruction_text = font_small.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    screen.blit(instruction_text, instruction_rect)
+
+    pygame.display.flip()
 
 
 class Player(pygame.sprite.Sprite):
@@ -77,22 +84,21 @@ class Player(pygame.sprite.Sprite):
         self.change_in_y = 0
         self.on_the_ground = False
 
-    
     def gravity_force(self):
         self.change_in_y += GRAVITY
+        if self.change_in_y > 10: 
+            self.change_in_y = 10
     
     def jump(self):
         if self.on_the_ground:
             self.change_in_y = JUMP_STRENGTH
             self.on_the_ground = False
 
-    
-
     def update(self, platforms_group):
-        global movement_on_x
+        global movement_on_x 
+        global current_game_state # Needed to change game state on game over
         
         self.gravity_force()
-
         self.rect.y += self.change_in_y
 
         if self.change_in_x > 0 and self.rect.right > SCREEN_WIDTH - 200:
@@ -101,10 +107,7 @@ class Player(pygame.sprite.Sprite):
             movement_on_x -= self.change_in_x
         else:
             self.rect.x += self.change_in_x
-
         
-
-
         if self.rect.left < 0:
             self.rect.left = 0
             self.change_in_x = 0
@@ -112,30 +115,28 @@ class Player(pygame.sprite.Sprite):
             self.rect.right = SCREEN_WIDTH
             self.change_in_x = 0
 
-
-        self.on_the_ground = False
+        self.on_the_ground = False 
 
         if self.rect.colliderect(ground_rect):
-            if self.change_in_y > 0:
-
+            if self.change_in_y > 0: 
                 self.rect.bottom = ground_rect.top
                 self.change_in_y = 0
                 self.on_the_ground = True
 
-
-        on_the_platform_list = pygame.sprite.spritecollide(self, platforms_group, False)
+        on_the_platform_list = pygame.sprite.spritecollide(self, platforms_group, False) 
 
         for platform in on_the_platform_list:
-
-            if self.change_in_y > 0 and self.rect.bottom <= platform.rect.bottom :
+            # Only allow landing on top of platform
+            if self.change_in_y > 0 and self.rect.bottom <= platform.rect.bottom + 5 and self.rect.centerx >= platform.rect.left and self.rect.centerx <= platform.rect.right: 
                 self.rect.bottom = platform.rect.top
                 self.change_in_y = 0
                 self.on_the_ground = True
-
-
-
-
-
+        
+        # Game Over condition (Player falls off screen) - Correctly placed outside platform loop
+        if self.rect.top > SCREEN_HEIGHT:
+            current_game_state = GAME_STATE_GAME_OVER
+            pygame.time.set_timer(SPAWN_ENEMY, 0) # Stop spawning enemies when game is over
+    
     def left_movement(self):
         self.change_in_x = -PLAYER_SPEED
 
@@ -147,233 +148,215 @@ class Player(pygame.sprite.Sprite):
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height):
-
-        super(Platform, self). __init__()
-
+        super(Platform, self).__init__() 
         self.image = pygame.Surface((width, height))
         self.image.fill((150, 75, 0)) 
-
         self.rect = self.image.get_rect()
-
         self.rect.x = x 
-
         self.rect.y = y 
+        self.start_x = x # Original world X position
 
-        self.start_x = x
-
-    def update(self, movement_on_x):
-
-        self.rect.x = self.start_x + movement_on_x
+    def update(self, movement_on_x_arg):
+        self.rect.x = self.start_x + movement_on_x_arg
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height, speed):
-        super(Enemy, self). __init__()
+        super(Enemy, self).__init__() 
         self.image = pygame.Surface((width, height))
         self.image.fill((255, 0 , 0))
         self.rect = self.image.get_rect()
 
-        self.initial_spawn_on_x = x
-        self.rect.x = x
+        self.world_x = x 
+        self.rect.x = x 
         self.rect.y = y
 
         self.speed = speed
 
-    def update(self, movement_on_x):
-        self.initial_spawn_on_x -= self.speed
-
-        self.rect.x = self.initial_spawn_on_x + movement_on_x
+    def update(self, movement_on_x_arg):
+        self.world_x -= self.speed 
+        self.rect.x = self.world_x + movement_on_x_arg
 
         if self.rect.right < 0:
             self.kill()
 
-
         
 all_sprites = pygame.sprite.Group()
-
 platforms = pygame.sprite.Group()
-
 enemies = pygame.sprite.Group()
 
-platform1 = Platform(100, SCREEN_HEIGHT - 100, 150, 20) 
-platform2 = Platform(SCREEN_WIDTH - 250, SCREEN_HEIGHT - 200, 200, 20) 
-platform3 = Platform(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT - 300, 150, 20) 
-platform4 = Platform(50, SCREEN_HEIGHT - 400, 100, 20)
-platform5 = Platform(SCREEN_WIDTH - 150, SCREEN_HEIGHT - 450, 100, 20)
-platform6 = Platform(SCREEN_WIDTH + 100, SCREEN_HEIGHT - 150, 150, 20) 
-platform7 = Platform(SCREEN_WIDTH + 300, SCREEN_HEIGHT - 250, 100, 20) 
-platform8 = Platform(SCREEN_WIDTH + 500, SCREEN_HEIGHT - 350, 180, 20) 
+# --- Automated Platform Generation Function ---
+def generate_platforms(count):
+    last_x = SCREEN_WIDTH # Start generating from the right edge of the screen
+    # If there are existing platforms, find the rightmost one to continue generation
+    if platforms:
+        last_x = max(p.start_x + p.rect.width for p in platforms) # Get world_x of rightmost platform's end
 
-platforms.add(platform1)
-platforms.add(platform2)
-platforms.add(platform3)
-platforms.add(platform4)
-platforms.add(platform5)
-platforms.add(platform6)
-platforms.add(platform7)
-platforms.add(platform8)
+    for _ in range(count):
+        x = last_x + random.randint(150, 300) 
+        y = random.randint(SCREEN_HEIGHT // 2, SCREEN_HEIGHT - GROUND_HEIGHT - 50) 
+        width = random.randint(100, 250) 
+        height = 20 
 
-for platform in platforms:
-    all_sprites.add(platform)
+        new_platform = Platform(x, y, width, height)
+        platforms.add(new_platform)
+        all_sprites.add(new_platform) # Corrected: adding new_platform, not the platforms group
+        last_x = x + width 
 
-enemy1 = Enemy(SCREEN_WIDTH + 200, (SCREEN_HEIGHT - GROUND_HEIGHT - 30), 30, 30, speed=3)
-enemies.add(enemy1)
-all_sprites.add(enemy1)
+# --- Game Reset Function ---
+def game_reset(): # Renamed to game_reset for consistency
+    global movement_on_x # Need to modify the global variable
+    global player # Ensure player object is accessible globally for reset
 
-enemy2 = Enemy(platform6.start_x + 100,(platform6.rect.top - 30), 30, 30, speed=3)
-enemies.add(enemy2)
-all_sprites.add(enemy2)
+    movement_on_x = 0
+
+    # Clear all existing sprites from their groups
+    all_sprites.empty()
+    platforms.empty()
+    enemies.empty()
+
+    # Re-initialize player position and state
+    player.rect.x = (SCREEN_WIDTH // 2) - (25 // 2)
+    player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
+    player.change_in_x = 0
+    player.change_in_y = 0
+    player.on_the_ground = False # Reset on_the_ground state
+    all_sprites.add(player) # Add player back to all_sprites
+
+    # Regenerate platforms
+    generate_platforms(15) # Generate an initial set of platforms (15 is a good starting number)
+
+    # Reset enemy timer to start spawning again
+    pygame.time.set_timer(SPAWN_ENEMY, 1500)
 
 
-player = Player()
-all_sprites.add(player)
+# Initialize player (needed before game_reset can add it to all_sprites)
+player = Player() 
 
-ground_start_x = ground_rect.x
+# Define SPAWN_ENEMY custom event
+SPAWN_ENEMY = pygame.USEREVENT + 1 
+
+# Initial game setup - calls game_reset to set up the initial state
+# This ensures that when the game starts, it's in a clean, playable state if PLAYING is the default
+# But since we start at MENU, game_reset is called by pressing SPACE
+# game_reset() # This line should be commented out or removed, as game_reset is called by menu transition
+
+
+ground_start_x = ground_rect.x # Store the initial world X position of the ground
 
 
 clock = pygame.time.Clock()
 FPS = 60
 
 
-Enemy_spawn = pygame.USEREVENT + 1
-pygame.time.set_timer(Enemy_spawn, 1500)
-
-
-
-
-
-
+# --- The Game Loop ---
 running = True
 
 while running:
 
+    # --- Event Handling ---
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
-
+        
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 running = False
 
+            # Handle KEYDOWN events based on current game state
             if current_game_state == GAME_STATE_MENU:
                 if event.key == K_SPACE:
-                    current_game_state == GAME_STATE_PLAYING
+                    current_game_state = GAME_STATE_PLAYING # Assignment
+                    game_reset() # Call game_reset to prepare for playing
+            elif current_game_state == GAME_STATE_PLAYING:
+                if event.key == K_LEFT:
+                    player.left_movement()
+                elif event.key == K_RIGHT:
+                    player.right_movement()
+                elif event.key == K_UP:
+                    player.jump()
+            elif current_game_state == GAME_STATE_GAME_OVER:
+                if event.key == K_r: # 'R' to restart (using K_r from locals)
+                    current_game_state = GAME_STATE_PLAYING # Assignment
+                    game_reset() # Call game_reset to prepare for playing
 
-                    player.rect.x = (SCREEN_WIDTH // 2) - (25 // 2)
-                    player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
-
-                    player.change_in_x = 0
-                    player.change_in_y = 0
-
-                    movement_on_x = 0
-
-                    platforms.empty()
-                    enemies.empty()
-                    
-                    pygame.time.set_timer(Enemy_spawn, 1500)
-
-            elif event.type == KEYUP and current_game_state == GAME_STATE_PLAYING:
+        # Handle KEYUP events (separate from KEYDOWN)
+        elif event.type == KEYUP:
+            if current_game_state == GAME_STATE_PLAYING: 
                 if event.key == K_LEFT and player.change_in_x < 0:
                     player.stop_movement()
-
-                elif event.key == K_RIGHT and player.change_in_y > 0:
+                elif event.key == K_RIGHT and player.change_in_x > 0: # Corrected player.change_in_x
                     player.stop_movement()
-
-            elif event.type == Enemy_spawn and current_game_state == GAME_STATE_PLAYING:
+        
+        # Handle SPAWN_ENEMY custom event (separate from KEYDOWN/KEYUP)
+        elif event.type == SPAWN_ENEMY:
+            if current_game_state == GAME_STATE_PLAYING:
                 enemy_width = random.randint(25, 40)
                 enemy_height = random.randint(25, 40)
                 enemy_speed = random.randint(2, 4)
 
-                spawn_x = SCREEN_WIDTH + random.randint(50, 200)
-
+                # Default spawn position (ground)
+                spawn_x_world = SCREEN_WIDTH + random.randint(50, 200) 
                 spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_height
-
-                if platforms and random.random() < 0.7:
-                    random_platform = random.choice(platforms.sprites())
-
-                    random_platform_y = random_platform.rect.top - enemy_height
-
-                    random_platform_x = random_platform.rect.top - enemy_height
-
-                    if random_platform_x + movement_on_x > -enemy_width and random_platform_x + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200:
-                        spawn_x = random_platform_x
-
-                        spawn_y = random_platform_y
-
                 
-
-
-
-
-            elif event.key == K_LEFT:
-                player.left_movement()
-
-            elif event.key == K_RIGHT:
-                player.right_movement()
-
-            elif event.key == K_UP:
-                player.jump()
-
-        elif event.type == KEYUP:
-            if event.key == K_LEFT and player.change_in_x < 0:
-                player.stop_movement()
-            elif event.key == K_RIGHT and player.change_in_x > 0:
-                player.stop_movement()
-
-        elif event.type == Enemy_spawn:
-            enemy_width = random.randint(25, 40)
-            enemy_height = random.randint(25, 40)
-            enemy_speed = random.randint(2, 4)
-
-            spawn_x = SCREEN_WIDTH + random.randint(50, 200)
-
-            ground_spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_height
-
-            platform_spawn_y = None
-
-            if platforms:
-                random_platform = random.choice(platforms.sprites())
-
-                platform_spawn_y = random_platform.rect.top - enemy_height 
-                platform_spawn_x = random_platform.start_x + random.randint(0, random_platform.rect.width - enemy_width)
-
-
-                if random.random() < 0.7 and platforms:
-                    new_enemy = Enemy(platform_spawn_x, platform_spawn_y, enemy_width, enemy_height, enemy_speed)
-                else:
-                    new_enemy = Enemy(spawn_x, ground_spawn_y, enemy_width, enemy_height, enemy_speed)
-
-
+                # Decide if we try to spawn on a platform
+                if platforms and random.random() < 0.7: # 70% chance to try platform spawn
+                    random_platform = random.choice(platforms.sprites()) 
+                    
+                    potential_platform_y = random_platform.rect.top - enemy_height
+                    # Corrected X calculation for enemy on platform
+                    potential_platform_x_world = random_platform.start_x + random.randint(0, max(0, random_platform.rect.width - enemy_width)) # Ensure width is positive
+                    
+                    # Ensure spawn is not too far off-screen
+                    if (potential_platform_x_world + movement_on_x > -enemy_width and 
+                        potential_platform_x_world + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200):
+                        
+                        spawn_x_world = potential_platform_x_world
+                        spawn_y = potential_platform_y
+                
+                new_enemy = Enemy(spawn_x_world, spawn_y, enemy_width, enemy_height, enemy_speed)
                 enemies.add(new_enemy)
                 all_sprites.add(new_enemy)
 
+    # --- Game State Updates and Drawing (outside the event loop, once per frame) ---
+    if current_game_state == GAME_STATE_MENU:
+        draw_menu_screen() 
+    elif current_game_state == GAME_STATE_PLAYING:
+        # Update game elements
+        player.update(platforms)
 
+        # Update all platforms and enemies, applying camera movement
+        for platform in platforms:
+            platform.update(movement_on_x)
 
+        for enemy in enemies:
+            enemy.update(movement_on_x)
 
-    player.update(platforms)
+        # Cleanup off-screen platforms
+        for platform in platforms.copy(): 
+            if platform.rect.right < 0: 
+                platform.kill() 
+        
+        # Generate new platforms if needed
+        if len(platforms) < 10: 
+            generate_platforms(5) 
 
-    for platform in platforms:
-        platform.update(movement_on_x)
+        # Drawing for PLAYING state
+        screen.fill((135, 206, 235)) # Sky Blue
 
+        # Draw ground (updated with camera movement)
+        new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
+        pygame.draw.rect(screen, (0, 255, 0), new_ground_rect) # Green
 
-    for enemy in enemies:
-        enemy.update(movement_on_x)
-    
+        # Draw all sprites (player, platforms, enemies)
+        all_sprites.draw(screen) 
+        pygame.display.flip()
 
-    screen.fill((135, 206, 235)) 
+    elif current_game_state == GAME_STATE_GAME_OVER: # Corrected state name
+        draw_game_over_screen() 
 
-    new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
-     
-    pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)
-
-    all_sprites.draw(screen)
-
-
-
-
-    pygame.display.flip()
-    clock.tick(FPS)
-
+    # Control frame rate
+    clock.tick(FPS) 
 
 pygame.quit()
                 

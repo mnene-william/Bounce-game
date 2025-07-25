@@ -7,6 +7,7 @@ from pygame.locals import(
     K_LEFT,
     K_RIGHT,
     K_ESCAPE,
+    K_SPACE,
     KEYDOWN,
     KEYUP,
     QUIT
@@ -25,6 +26,12 @@ JUMP_STRENGTH = -20
 
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
+
+GAME_STATE_MENU = 0
+GAME_STATE_PLAYING = 1
+GAME_STATE_OVER = 2
+
+current_game_state = GAME_STATE_MENU
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
 movement_on_x = 0
@@ -32,6 +39,28 @@ movement_on_x = 0
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption("Bounce game") 
+
+
+def menu_screen():
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 74)
+    text = font.render("Bounce Game", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
+    screen.blit(text, text_rect)
+
+def game_over_screen():
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 74)
+    text = font.render("GAME OVER", True, (255, 0, 0))
+    text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
+    screen.blit(text, text_rect)
+
+    small_font = pygame.font.Font(None, 36)
+    instruction_text = small_font.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    screen.blit(instruction_text, instruction_rect)
+
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -225,6 +254,56 @@ while running:
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 running = False
+
+            if current_game_state == GAME_STATE_MENU:
+                if event.key == K_SPACE:
+                    current_game_state == GAME_STATE_PLAYING
+
+                    player.rect.x = (SCREEN_WIDTH // 2) - (25 // 2)
+                    player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
+
+                    player.change_in_x = 0
+                    player.change_in_y = 0
+
+                    movement_on_x = 0
+
+                    platforms.empty()
+                    enemies.empty()
+                    
+                    pygame.time.set_timer(Enemy_spawn, 1500)
+
+            elif event.type == KEYUP and current_game_state == GAME_STATE_PLAYING:
+                if event.key == K_LEFT and player.change_in_x < 0:
+                    player.stop_movement()
+
+                elif event.key == K_RIGHT and player.change_in_y > 0:
+                    player.stop_movement()
+
+            elif event.type == Enemy_spawn and current_game_state == GAME_STATE_PLAYING:
+                enemy_width = random.randint(25, 40)
+                enemy_height = random.randint(25, 40)
+                enemy_speed = random.randint(2, 4)
+
+                spawn_x = SCREEN_WIDTH + random.randint(50, 200)
+
+                spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_height
+
+                if platforms and random.random() < 0.7:
+                    random_platform = random.choice(platforms.sprites())
+
+                    random_platform_y = random_platform.rect.top - enemy_height
+
+                    random_platform_x = random_platform.rect.top - enemy_height
+
+                    if random_platform_x + movement_on_x > -enemy_width and random_platform_x + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200:
+                        spawn_x = random_platform_x
+
+                        spawn_y = random_platform_y
+
+                
+
+
+
 
             elif event.key == K_LEFT:
                 player.left_movement()

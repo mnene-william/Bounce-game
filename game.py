@@ -25,6 +25,9 @@ GRAVITY = 1
 PLAYER_SPEED = 4
 JUMP_STRENGTH = -20
 
+
+GAME_SPEED = 5
+
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
 
@@ -107,14 +110,6 @@ class Player(pygame.sprite.Sprite):
         self.gravity_force()
         self.rect.y += self.change_in_y
 
-        if self.change_in_x > 0 and self.rect.right > SCREEN_WIDTH - 200:
-            movement_on_x -= self.change_in_x
-
-        elif self.change_in_x < 0 and self.rect.left < 200:
-            movement_on_x -= self.change_in_x
-
-        else:
-            self.rect.x += self.change_in_x
 
         if self.rect.left < 0:
             self.rect.left = 0
@@ -213,6 +208,7 @@ def generate_platforms(count):
 
         new_platform = Platform(x, y, width, height)
         platforms.add(new_platform)
+        
         all_sprites.add(new_platform)
         last_x = x + width
 
@@ -263,25 +259,14 @@ while running:
                     current_game_state = GAME_STATE_PLAYING
                     game_reset()
             elif current_game_state == GAME_STATE_PLAYING:
-                if event.key == K_LEFT:
-                    player.left_movement()
-                elif event.key == K_RIGHT:
-                    player.right_movement()
-                elif event.key == K_UP:
+                if event.key == K_UP:
                     player.jump()
+
+
             elif current_game_state == GAME_STATE_GAME_OVER:
                 if event.key == K_r:
                     current_game_state = GAME_STATE_PLAYING
                     game_reset()
-
-        elif event.type == KEYUP:
-            if current_game_state == GAME_STATE_PLAYING:
-                
-                if event.key == K_LEFT and player.change_in_x < 0:
-                    player.stop_movement()
-
-                elif event.key == K_RIGHT and player.change_in_x > 0:
-                    player.stop_movement()
 
         elif event.type == Enemy_spawn:
 
@@ -317,6 +302,9 @@ while running:
 
 
     elif current_game_state == GAME_STATE_PLAYING:
+
+        movement_on_x -=GAME_SPEED
+
         player.update(platforms)
         
 

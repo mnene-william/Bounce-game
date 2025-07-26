@@ -27,6 +27,7 @@ JUMP_STRENGTH = -20
 
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
+
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
 movement_on_x = 0
@@ -142,6 +143,15 @@ class Player(pygame.sprite.Sprite):
 
         if self.rect.top > SCREEN_HEIGHT:
             current_game_state = GAME_STATE_GAME_OVER
+            pygame.time.set_timer(Enemy_spawn, 0)
+
+
+
+        collided_enemies = pygame.sprite.spritecollide(self, enemies, True)
+
+        if collided_enemies:
+            current_game_state = GAME_STATE_GAME_OVER
+
             pygame.time.set_timer(Enemy_spawn, 0)
 
     def left_movement(self):
@@ -274,7 +284,7 @@ while running:
                     player.stop_movement()
 
         elif event.type == Enemy_spawn:
-            
+
             if current_game_state == GAME_STATE_PLAYING:
                 enemy_width = random.randint(25, 40)
                 enemy_height = random.randint(25, 40)

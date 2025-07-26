@@ -296,19 +296,23 @@ while running:
             running = False
 
         elif event.type == KEYDOWN:
+
             if event.key == K_ESCAPE:
                 running = False
 
             if current_game_state == GAME_STATE_MENU:
+
                 if event.key == K_SPACE:
                     current_game_state = GAME_STATE_PLAYING
                     game_reset()
             elif current_game_state == GAME_STATE_PLAYING:
+
                 if event.key == K_UP:
                     player.jump()
 
 
             elif current_game_state == GAME_STATE_GAME_OVER:
+
                 if event.key == K_r:
                     current_game_state = GAME_STATE_PLAYING
                     game_reset()
@@ -331,8 +335,7 @@ while running:
                     potential_platform_x_world = random_platform.start_x + random.randint(0, max(0, random_platform.rect.width - enemy_width))
 
 
-                    if (potential_platform_x_world + movement_on_x > -enemy_width and
-                        potential_platform_x_world + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200):
+                    if (potential_platform_x_world + movement_on_x > -enemy_width and potential_platform_x_world + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200):
 
                         spawn_x_world = potential_platform_x_world
                         spawn_y = potential_platform_y

@@ -377,19 +377,41 @@ while running:
 
         screen.fill((135, 206, 235))
 
-        screen.blit(bg_image_1, (int(background_image_1_x % bg_image_1.get_width()), SCREEN_HEIGHT - BG_1_HEIGHT))
-        screen.blit(bg_image_1, (int(background_image_1_x % bg_image_1.get_width()) + bg_image_1.get_width(), SCREEN_HEIGHT - BG_1_HEIGHT))
+        first_image =  int(background_image_1_x % bg_image_1.get_width())
+        screen.blit(bg_image_1, (first_image, SCREEN_HEIGHT - BG_1_HEIGHT))
+
+        if first_image > 0:
+            screen.blit(bg_image_1, (first_image - bg_image_1.get_width(), SCREEN_HEIGHT - BG_1_HEIGHT))
+        if first_image < SCREEN_WIDTH - bg_image_1.get_width():
+            screen.blit(bg_image_1, (first_image))
+
+
+        second_image = int(background_image_2_x % bg_image_2.get_width())
+        screen.blit(bg_image_2, (second_image, SCREEN_HEIGHT - BG_2_HEIGHT))
+    
+        if second_image > 0:
+            screen.blit(bg_image_2, (second_image - bg_image_2.get_width(), SCREEN_HEIGHT - BG_2_HEIGHT))
+        if second_image < SCREEN_WIDTH - bg_image_2.get_width():
+            screen.blit(bg_image_2, (second_image + bg_image_2.get_width(), SCREEN_HEIGHT - BG_2_HEIGHT))
+
+        third_image = int(background_image_3_x % bg_image_3.get_width())
+        screen.blit(bg_image_3, (third_image, SCREEN_HEIGHT - BG_3_HEIGHT))
+
+        if third_image > 0:
+             screen.blit(bg_image_3, (third_image - bg_image_3.get_width(), SCREEN_HEIGHT - BG_3_HEIGHT))
+        if third_image < SCREEN_WIDTH - bg_image_3.get_width():
+            screen.blit(bg_image_3, (third_image + bg_image_3.get_width(), SCREEN_HEIGHT - BG_3_HEIGHT))
+
+    
+        fourth_image = int(background_image_4_x % bg_image_4.get_width())
+        screen.blit(bg_image_4, (third_image, SCREEN_HEIGHT - BG_4_HEIGHT))
+
+        if fourth_image > 0:
+             screen.blit(bg_image_4, (fourth_image + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
+        if third_image < SCREEN_WIDTH - bg_image_3.get_width():
+            screen.blit(bg_image_4, (fourth_image + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
 
         
-        screen.blit(bg_image_2, (int(background_image_2_x % bg_image_2.get_width()), SCREEN_HEIGHT - BG_2_HEIGHT))
-        screen.blit(bg_image_2, (int(background_image_2_x % bg_image_2.get_width()) + bg_image_2.get_width(), SCREEN_HEIGHT - BG_2_HEIGHT))
-
-        
-        screen.blit(bg_image_3, (int(background_image_3_x % bg_image_3.get_width()), SCREEN_HEIGHT - BG_3_HEIGHT))
-        screen.blit(bg_image_3, (int(background_image_3_x % bg_image_3.get_width()) + bg_image_3.get_width(), SCREEN_HEIGHT - BG_3_HEIGHT))
-
-        screen.blit(bg_image_4, (int(background_image_4_x % bg_image_4.get_width()), SCREEN_HEIGHT - BG_4_HEIGHT))
-        screen.blit(bg_image_4, (int(background_image_4_x % bg_image_4.get_width()) + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
 
         new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
         pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)

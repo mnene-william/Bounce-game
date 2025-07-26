@@ -1,4 +1,3 @@
-# Replace all SPAWN_ENEMY with Enemy_spawn
 
 import pygame
 import random
@@ -28,12 +27,30 @@ JUMP_STRENGTH = -20
 
 GAME_SPEED = 5
 
+BACKGROUND_IMAGE_1_PATH = 'Layer1.png'
+BACKGROUND_IMAGE_1_SPEED = 0.1
+
+BACKGROUND_IMAGE_2_PATH = 'Layer2.png'
+BACKGROUND_IMAGE_2_SPEED = 0.3
+
+
+BACKGROUND_IMAGE_3_PATH = 'Layer3.png'
+BACKGROUND_IMAGE_3_SPEED = 0.5
+
+BACKGROUND_IMAGE_4_PATH = 'Layer4.png'
+BACKGROUND_IMAGE_4_SPEED = 0.7
+
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
 
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
 movement_on_x = 0
+
+background_image_1_x = 0
+background_image_2_x = 0
+background_image_3_x = 0
+background_image_4_x = 0
 
 GAME_STATE_MENU = 0
 GAME_STATE_PLAYING = 1
@@ -44,6 +61,34 @@ current_game_state = GAME_STATE_MENU
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bounce game")
+
+bg_image_1 = None
+bg_image_2 = None
+bg_image_3 = None
+bg_image_4 = None
+
+BG_1_HEIGHT = 0
+BG_2_HEIGHT = 0
+BG_3_HEIGHT = 0
+BG_4_HEIGHT = 0
+
+
+try:
+
+    bg_image_1 = pygame.image.load(BACKGROUND_IMAGE_1_PATH).convert_alpha()
+    bg_image_2 = pygame.image.load(BACKGROUND_IMAGE_2_PATH).convert_alpha()
+    bg_image_3 = pygame.image.load(BACKGROUND_IMAGE_3_PATH).convert_alpha()
+    bg_image_4 = pygame.image.load(BACKGROUND_IMAGE_4_PATH).convert_alpha()
+
+    BG_1_HEIGHT = bg_image_1.get_height()
+    BG_2_HEIGHT = bg_image_2.get_height()
+    BG_3_HEIGHT = bg_image_3.get_height()
+    BG_4_HEIGHT = bg_image_4.get_height()
+
+except:
+    print(f"Error loading background image")
+
+
 
 def draw_menu_screen():
     screen.fill((0, 0, 0))
@@ -305,6 +350,12 @@ while running:
 
         movement_on_x -=GAME_SPEED
 
+        background_image_1_x -=GAME_SPEED * BACKGROUND_IMAGE_1_SPEED
+        background_image_2_x -=GAME_SPEED * BACKGROUND_IMAGE_2_SPEED
+        background_image_3_x -=GAME_SPEED * BACKGROUND_IMAGE_3_SPEED
+        background_image_4_x -=GAME_SPEED * BACKGROUND_IMAGE_4_SPEED
+        
+
         player.update(platforms)
         
 
@@ -322,6 +373,20 @@ while running:
             generate_platforms(5)
 
         screen.fill((135, 206, 235))
+
+        screen.blit(bg_image_1, (int(background_image_1_x % bg_image_1.get_width()), SCREEN_HEIGHT - BG_1_HEIGHT))
+        screen.blit(bg_image_1, (int(background_image_1_x % bg_image_1.get_width()) + bg_image_1.get_width(), SCREEN_HEIGHT - BG_1_HEIGHT))
+
+        
+        screen.blit(bg_image_2, (int(background_image_2_x % bg_image_2.get_width()), SCREEN_HEIGHT - BG_2_HEIGHT))
+        screen.blit(bg_image_2, (int(background_image_2_x % bg_image_2.get_width()) + bg_image_2.get_width(), SCREEN_HEIGHT - BG_2_HEIGHT))
+
+        
+        screen.blit(bg_image_3, (int(background_image_3_x % bg_image_3.get_width()), SCREEN_HEIGHT - BG_3_HEIGHT))
+        screen.blit(bg_image_3, (int(background_image_3_x % bg_image_3.get_width()) + bg_image_3.get_width(), SCREEN_HEIGHT - BG_3_HEIGHT))
+
+        screen.blit(bg_image_4, (int(background_image_4_x % bg_image_4.get_width()), SCREEN_HEIGHT - BG_4_HEIGHT))
+        screen.blit(bg_image_4, (int(background_image_4_x % bg_image_4.get_width()) + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
 
         new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
         pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)

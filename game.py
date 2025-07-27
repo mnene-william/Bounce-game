@@ -63,6 +63,8 @@ GAME_STATE_GAME_OVER = 2
 score = 0
 score_font = None
 
+collectibles_count = 0
+
 current_game_state = GAME_STATE_MENU
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -129,8 +131,12 @@ def draw_game_over_screen():
     font_small = pygame.font.Font(None, 30)
 
     final_score_text = font_small.render(f"Final score: {score}", True, (255, 255, 0))
-    final_score_rect = final_score_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    final_score_rect = final_score_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 20))
     screen.blit(final_score_text, final_score_rect)
+
+    final_collectibles_text = font_small.render(f"Collectibles: {collectibles_count}", True, (255, 255, 255))
+    final_collectibles_rect = final_collectibles_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    screen.blit(final_collectibles_text, final_collectibles_rect)
 
     instruction_text_restart = font_small.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
     instruction_restart_rect = instruction_text_restart.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70))
@@ -175,6 +181,7 @@ class Player(pygame.sprite.Sprite):
         global movement_on_x
         global current_game_state
         global score
+        global collectibles_count
 
         self.gravity_force()
         self.rect.y += self.change_in_y
@@ -221,6 +228,7 @@ class Player(pygame.sprite.Sprite):
         collected_items = pygame.sprite.spritecollide(self, collectibles_group, True)
         for item in collected_items:
             score +=10
+            collectibles_count += 1
 
     def left_movement(self):
         self.change_in_x = -PLAYER_SPEED
@@ -319,10 +327,12 @@ def game_reset():
     global movement_on_x
     global player
     global score
+    global collectibles_count
 
     movement_on_x = 0
 
     score = 0
+    collectibles_count = 0
 
     all_sprites.empty()
     platforms.empty()
@@ -500,6 +510,9 @@ while running:
 
         score_text = score_font.render(f"Score: {score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+
+        collectibles_count_text = score_font.render(f"Collectibles: {collectibles_count}", True, (0, 255, 255))
+        screen.blit(collectibles_count_text, (10, 50))
 
         pygame.display.flip()
 

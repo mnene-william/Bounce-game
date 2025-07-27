@@ -73,7 +73,7 @@ bg_image_2 = None
 bg_image_3 = None
 bg_image_4 = None
 
-playet_sprite_sheet = None
+player_sprite_sheet = None
 
 BG_1_HEIGHT = 0
 BG_2_HEIGHT = 0
@@ -171,9 +171,10 @@ class Player(pygame.sprite.Sprite):
             self.change_in_y = JUMP_STRENGTH
             self.on_the_ground = False
 
-    def update(self, platforms_group):
+    def update(self, platforms_group, enemies_group, collectibles_group):
         global movement_on_x
         global current_game_state
+        global score
 
         self.gravity_force()
         self.rect.y += self.change_in_y
@@ -210,16 +211,19 @@ class Player(pygame.sprite.Sprite):
 
 
 
-        collided_enemies = pygame.sprite.spritecollide(self, enemies, True)
+        collided_enemies = pygame.sprite.spritecollide(self, enemies_group, True)
 
         if collided_enemies:
             current_game_state = GAME_STATE_GAME_OVER
 
             pygame.time.set_timer(Enemy_spawn, 0)
 
+        collected_items = pygame.sprite.spritecollide(self, collectibles_group, True)
+        for item in collected_items:
+            score +=10
+
     def left_movement(self):
         self.change_in_x = -PLAYER_SPEED
-
     def right_movement(self):
         self.change_in_x = PLAYER_SPEED
 
@@ -259,9 +263,31 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
+class Collectible(pygame.sprite.Sprite):
+    def __init__ (self, x, y, size=15, color=(0, 255, 255)):
+        super(Collectible, self). __init__()
+        self.image = pygame.Surface((size, size))
+        self.image.fill(color)
+        self.rect =  self.image.get_rect()
+
+        self.world_x = x
+        self.rect.x = x
+        self.rect.y = y
+
+        self.collected = False
+
+    def update(self, movement_on_x):
+        self.rect.x = self.world_x + movement_on_x
+
+        if self.rect.right < 0:
+            self.kill()
+
+
 all_sprites = pygame.sprite.Group()
 platforms = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+collectibles = pygame.sprite.Group()
 
 def generate_platforms(count):
     last_x = SCREEN_WIDTH
@@ -280,6 +306,15 @@ def generate_platforms(count):
         all_sprites.add(new_platform)
         last_x = x + width
 
+        if random.random() < 0.6:
+            collectible_x = x + random.randint(0, max(0, width - 15))
+            collectible_y = y - 20
+
+            new_collectible = Collectible(collectible_x, collectible_y) 
+
+            collectibles.add(new_collectible)
+            all_sprites.add(new_collectible)
+
 def game_reset():
     global movement_on_x
     global player
@@ -292,6 +327,7 @@ def game_reset():
     all_sprites.empty()
     platforms.empty()
     enemies.empty()
+    collectibles.empty()
 
     player.rect.x = (SCREEN_WIDTH // 2) - (player.rect.width // 2)
     player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - player.rect.height
@@ -387,7 +423,7 @@ while running:
         background_image_4_x -=GAME_SPEED * BACKGROUND_IMAGE_4_SPEED
         
 
-        player.update(platforms)
+        player.update(platforms, enemies, collectibles)
         
 
         for platform in platforms:
@@ -396,9 +432,21 @@ while running:
         for enemy in enemies:
             enemy.update(movement_on_x)
 
+        for collectible in collectibles:
+            collectible.update(movement_on_x)
+
         for platform in platforms.copy():
             if platform.rect.right < 0:
                 platform.kill()
+        
+        for enemy in enemies.copy():
+            if enemy.rect.right < 0:
+                enemy.kill()
+        for collectible in collectibles.copy():
+            if collectible.rect.right < 0:
+                collectible.kill()
+
+      
 
         if len(platforms) < 10:
             generate_platforms(5)
@@ -443,6 +491,10 @@ while running:
 
         new_ground_rect = pygame.Rect(ground_start_x + movement_on_x, ground_rect.y, ground_rect.width, ground_rect.height)
         pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)
+
+        collectibles.draw(screen) 
+        platforms.draw(screen) 
+        enemies.draw(screen)
 
         all_sprites.draw(screen)
 

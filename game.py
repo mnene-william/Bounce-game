@@ -41,7 +41,7 @@ BACKGROUND_IMAGE_4_PATH = 'Layer4.png'
 BACKGROUND_IMAGE_4_SPEED = 0.7
 
 
-PLAYER_SPRITE_PATH = 'mechaneko-sheet2-r1-alpha.png'
+PLAYER_SPRITE_PATH = 'mechaneko-sheet1-r1-alpha.png'
 
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
@@ -132,11 +132,11 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
 
-        player_frame_rect = (0, 0, 16, 16 )
+        player_frame_rect = (164, 387, 38, 30)
         self.image = player_sprite_sheet.subsurface(player_frame_rect)
 
 
-        scale_factor = 3
+        scale_factor = 2
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width() * scale_factor, self.image.get_height() * scale_factor))
 

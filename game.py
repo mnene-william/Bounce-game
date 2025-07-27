@@ -40,6 +40,9 @@ BACKGROUND_IMAGE_3_SPEED = 0.5
 BACKGROUND_IMAGE_4_PATH = 'Layer4.png'
 BACKGROUND_IMAGE_4_SPEED = 0.7
 
+
+PLAYER_SPRITE_PATH = 'mechaneko-sheet2-r1-alpha.png'
+
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
 
@@ -67,6 +70,8 @@ bg_image_2 = None
 bg_image_3 = None
 bg_image_4 = None
 
+playet_sprite_sheet = None
+
 BG_1_HEIGHT = 0
 BG_2_HEIGHT = 0
 BG_3_HEIGHT = 0
@@ -79,6 +84,8 @@ try:
     bg_image_2 = pygame.image.load(BACKGROUND_IMAGE_2_PATH).convert_alpha()
     bg_image_3 = pygame.image.load(BACKGROUND_IMAGE_3_PATH).convert_alpha()
     bg_image_4 = pygame.image.load(BACKGROUND_IMAGE_4_PATH).convert_alpha()
+
+    player_sprite_sheet = pygame.image.load(PLAYER_SPRITE_PATH).convert_alpha()
 
     BG_1_HEIGHT = bg_image_1.get_height()
     BG_2_HEIGHT = bg_image_2.get_height()
@@ -125,13 +132,19 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
 
-        self.image = pygame.Surface((25, 75))
-        self.image.fill((0, 0, 255))
+        player_frame_rect = (0, 0, 16, 16 )
+        self.image = player_sprite_sheet.subsurface(player_frame_rect)
+
+
+        scale_factor = 3
+
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() * scale_factor, self.image.get_height() * scale_factor))
+
         self.rect = self.image.get_rect()
 
-        self.rect.x = (SCREEN_WIDTH // 2) - (25 // 2)
+        self.rect.x = (SCREEN_WIDTH // 2) - (self.rect.width // 2)
 
-        self.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
+        self.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT -self.rect.height
 
         self.change_in_x = 0
         self.change_in_y = 0
@@ -267,14 +280,14 @@ def game_reset():
     platforms.empty()
     enemies.empty()
 
-    player.rect.x = (SCREEN_WIDTH // 2) - (25 // 2)
-    player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - 75
+    player.rect.x = (SCREEN_WIDTH // 2) - (player.rect.width // 2)
+    player.rect.y = SCREEN_HEIGHT - GROUND_HEIGHT - player.rect.height
     player.change_in_x = 0
     player.change_in_y = 0
     player.on_the_ground = False
     all_sprites.add(player)
 
-    generate_platforms(15)
+    generate_platforms(20)
 
     pygame.time.set_timer(Enemy_spawn, 1500)
 
@@ -383,7 +396,7 @@ while running:
         if first_image > 0:
             screen.blit(bg_image_1, (first_image - bg_image_1.get_width(), SCREEN_HEIGHT - BG_1_HEIGHT))
         if first_image < SCREEN_WIDTH - bg_image_1.get_width():
-            screen.blit(bg_image_1, (first_image))
+            screen.blit(bg_image_1, (first_image + bg_image_1.get_width(), SCREEN_HEIGHT - BG_1_HEIGHT))
 
 
         second_image = int(background_image_2_x % bg_image_2.get_width())
@@ -404,11 +417,11 @@ while running:
 
     
         fourth_image = int(background_image_4_x % bg_image_4.get_width())
-        screen.blit(bg_image_4, (third_image, SCREEN_HEIGHT - BG_4_HEIGHT))
+        screen.blit(bg_image_4, (fourth_image, SCREEN_HEIGHT - BG_4_HEIGHT))
 
         if fourth_image > 0:
              screen.blit(bg_image_4, (fourth_image + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
-        if third_image < SCREEN_WIDTH - bg_image_3.get_width():
+        if fourth_image < SCREEN_WIDTH - bg_image_4.get_width():
             screen.blit(bg_image_4, (fourth_image + bg_image_4.get_width(), SCREEN_HEIGHT - BG_4_HEIGHT))
 
         

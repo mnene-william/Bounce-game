@@ -60,6 +60,9 @@ GAME_STATE_PLAYING = 1
 
 GAME_STATE_GAME_OVER = 2
 
+score = 0
+score_font = None
+
 current_game_state = GAME_STATE_MENU
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -92,6 +95,8 @@ try:
     BG_3_HEIGHT = bg_image_3.get_height()
     BG_4_HEIGHT = bg_image_4.get_height()
 
+    score_font = pygame.font.Font(None, 48)
+
 except:
     print(f"Error loading background image")
 
@@ -121,10 +126,15 @@ def draw_game_over_screen():
     text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 50))
     screen.blit(text, text_rect)
 
-    font_small = pygame.font.Font(None, 36)
-    instruction_text = font_small.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
-    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
-    screen.blit(instruction_text, instruction_rect)
+    font_small = pygame.font.Font(None, 30)
+
+    final_score_text = font_small.render(f"Final score: {score}", True, (255, 255, 0))
+    final_score_rect = final_score_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    screen.blit(final_score_text, final_score_rect)
+
+    instruction_text_restart = font_small.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
+    instruction_restart_rect = instruction_text_restart.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70))
+    screen.blit(instruction_text_restart, instruction_restart_rect)
 
     pygame.display.flip()
 
@@ -273,8 +283,11 @@ def generate_platforms(count):
 def game_reset():
     global movement_on_x
     global player
+    global score
 
     movement_on_x = 0
+
+    score = 0
 
     all_sprites.empty()
     platforms.empty()
@@ -366,6 +379,8 @@ while running:
 
         movement_on_x -=GAME_SPEED
 
+        score = abs(movement_on_x // 5)
+
         background_image_1_x -=GAME_SPEED * BACKGROUND_IMAGE_1_SPEED
         background_image_2_x -=GAME_SPEED * BACKGROUND_IMAGE_2_SPEED
         background_image_3_x -=GAME_SPEED * BACKGROUND_IMAGE_3_SPEED
@@ -430,6 +445,10 @@ while running:
         pygame.draw.rect(screen, (0, 255, 0), new_ground_rect)
 
         all_sprites.draw(screen)
+
+        score_text = score_font.render(f"Score: {score}", True, (255, 255, 255))
+        screen.blit(score_text, (10, 10))
+
         pygame.display.flip()
 
     elif current_game_state == GAME_STATE_GAME_OVER:

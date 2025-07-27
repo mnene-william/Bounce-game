@@ -43,6 +43,8 @@ BACKGROUND_IMAGE_4_SPEED = 0.7
 
 PLAYER_SPRITE_PATH = 'mechaneko-sheet1-r1-alpha.png'
 
+ENEMY_SPRITE_PATH = (318, 290, 41, 35)
+
 GROUND_HEIGHT = 25
 GROUND_WIDTH = SCREEN_WIDTH * 7
 
@@ -60,8 +62,12 @@ GAME_STATE_PLAYING = 1
 
 GAME_STATE_GAME_OVER = 2
 
+GAME_STATE_WON = 3
+
 score = 0
 score_font = None
+
+WIN_SCORE = 1000
 
 collectibles_count = 0
 
@@ -77,6 +83,8 @@ bg_image_4 = None
 
 player_sprite_sheet = None
 
+enemy_sprite_image = None
+
 BG_1_HEIGHT = 0
 BG_2_HEIGHT = 0
 BG_3_HEIGHT = 0
@@ -91,6 +99,11 @@ try:
     bg_image_4 = pygame.image.load(BACKGROUND_IMAGE_4_PATH).convert_alpha()
 
     player_sprite_sheet = pygame.image.load(PLAYER_SPRITE_PATH).convert_alpha()
+
+    temp_enemy_image = player_sprite_sheet.subsurface(ENEMY_SPRITE_PATH)
+
+    scale_factor = 2
+    enemy_sprite_image = pygame.transform.scale(temp_enemy_image, (temp_enemy_image.get_width() * scale_factor, temp_enemy_image.get_height() * scale_factor))
 
     BG_1_HEIGHT = bg_image_1.get_height()
     BG_2_HEIGHT = bg_image_2.get_height()
@@ -143,6 +156,32 @@ def draw_game_over_screen():
     screen.blit(instruction_text_restart, instruction_restart_rect)
 
     pygame.display.flip()
+
+
+def draw_win_screen():
+    screen.fill((0, 150, 0))
+    font = pygame.font.Font(None, 70)
+    text = font.render("YOU WIN!", True, (255, 255, 0))
+
+    text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT/ 2 - 50))
+    screen.blit(text, text_rect)
+
+    font_small = pygame.font.Font(None, 36)
+    final_score_text = font_small.render(f"Final Score: {score}", True, (255, 255, 255))
+    final_score_rect = final_score_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 20))
+    screen.blit(final_score_text, final_score_rect)
+
+    final_collectibles_text = font_small.render(f"Collectibles: {collectibles_count}", True, (0, 255, 255))
+    final_collectibles_rect = final_collectibles_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50))
+    screen.blit(final_collectibles_text, final_collectibles_rect)
+
+    instruction_text_restart = font_small.render("Press R to Restart or ESC to Quit", True, (255, 255, 255))
+    instruction_restart_rect = instruction_text_restart.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100))
+    screen.blit(instruction_text_restart, instruction_restart_rect)
+
+    pygame.display.flip()
+
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -252,10 +291,9 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = self.start_x + movement_on_x
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height, speed):
+    def __init__(self, x, y, image, speed):
         super(Enemy, self).__init__()
-        self.image = pygame.Surface((width, height))
-        self.image.fill((255, 0 , 0))
+        self.image = image
         self.rect = self.image.get_rect()
 
         self.world_x = x
@@ -392,27 +430,26 @@ while running:
         elif event.type == Enemy_spawn:
 
             if current_game_state == GAME_STATE_PLAYING:
-                enemy_width = random.randint(25, 40)
-                enemy_height = random.randint(25, 40)
+
 
                 enemy_speed = random.randint(2, 4)
 
                 spawn_x_world = SCREEN_WIDTH + random.randint(50, 200)
-                spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_height
+                spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_sprite_image.get_height()
 
                 if platforms and random.random() < 0.7:
                     random_platform = random.choice(platforms.sprites())
 
-                    potential_platform_y = random_platform.rect.top - enemy_height
-                    potential_platform_x_world = random_platform.start_x + random.randint(0, max(0, random_platform.rect.width - enemy_width))
+                    potential_platform_y = random_platform.rect.top - enemy_sprite_image.get_height()
+                    potential_platform_x_world = random_platform.start_x + random.randint(0, max(0, random_platform.rect.width - enemy_sprite_image.get_width()))
 
 
-                    if (potential_platform_x_world + movement_on_x > -enemy_width and potential_platform_x_world + movement_on_x < SCREEN_WIDTH + random_platform.rect.width + 200):
+                    if (potential_platform_x_world + movement_on_x < SCREEN_WIDTH + 100):
 
                         spawn_x_world = potential_platform_x_world
                         spawn_y = potential_platform_y
 
-                new_enemy = Enemy(spawn_x_world, spawn_y, enemy_width, enemy_height, enemy_speed)
+                new_enemy = Enemy(spawn_x_world, spawn_y, enemy_sprite_image, enemy_speed)
                 enemies.add(new_enemy)
                 all_sprites.add(new_enemy)
 
@@ -426,6 +463,10 @@ while running:
         movement_on_x -=GAME_SPEED
 
         score = abs(movement_on_x // 5)
+
+        if score >=  WIN_SCORE:
+            current_game_state = GAME_STATE_WON
+            pygame.time.set_timer(Enemy_spawn, 0)
 
         background_image_1_x -=GAME_SPEED * BACKGROUND_IMAGE_1_SPEED
         background_image_2_x -=GAME_SPEED * BACKGROUND_IMAGE_2_SPEED
@@ -461,7 +502,12 @@ while running:
         if len(platforms) < 10:
             generate_platforms(5)
 
-        screen.fill((135, 206, 235))
+        if score >= WIN_SCORE:
+            current_game_state = GAME_STATE_WON
+            pygame.time.set_timer(Enemy_spawn, 0)
+
+        if current_game_state == GAME_STATE_PLAYING:
+            screen.fill((135, 206, 235))
 
         first_image =  int(background_image_1_x % bg_image_1.get_width())
         screen.blit(bg_image_1, (first_image, SCREEN_HEIGHT - BG_1_HEIGHT))
@@ -518,6 +564,8 @@ while running:
 
     elif current_game_state == GAME_STATE_GAME_OVER:
         draw_game_over_screen()
+    elif current_game_state == GAME_STATE_WON:
+        draw_win_screen()
 
     clock.tick(FPS)
 

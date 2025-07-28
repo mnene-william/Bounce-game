@@ -22,7 +22,7 @@ SCREEN_HEIGHT = 700
 
 GRAVITY = 1
 PLAYER_SPEED = 4
-JUMP_STRENGTH = -20
+JUMP_STRENGTH = -24
 
 
 GAME_SPEED = 5
@@ -46,7 +46,7 @@ PLAYER_SPRITE_PATH = 'mechaneko-sheet1-r1-alpha.png'
 ENEMY_SPRITE_PATH = (318, 290, 41, 35)
 
 GROUND_HEIGHT = 25
-GROUND_WIDTH = SCREEN_WIDTH * 7
+GROUND_WIDTH = SCREEN_WIDTH * 30
 
 ground_rect = pygame.Rect(0, (SCREEN_HEIGHT - GROUND_HEIGHT), GROUND_WIDTH, GROUND_HEIGHT)
 
@@ -67,7 +67,7 @@ GAME_STATE_WON = 3
 score = 0
 score_font = None
 
-WIN_SCORE = 1000
+WIN_SCORE = 3000
 
 collectibles_count = 0
 
@@ -384,9 +384,9 @@ def game_reset():
     player.on_the_ground = False
     all_sprites.add(player)
 
-    generate_platforms(20)
+    generate_platforms(25)
 
-    pygame.time.set_timer(Enemy_spawn, 1500)
+    pygame.time.set_timer(Enemy_spawn, 1100)
 
 player = Player()
 
@@ -432,12 +432,12 @@ while running:
             if current_game_state == GAME_STATE_PLAYING:
 
 
-                enemy_speed = random.randint(2, 4)
+                enemy_speed = random.randint(5, 9)
 
-                spawn_x_world = SCREEN_WIDTH + random.randint(50, 200)
+                spawn_x_world = SCREEN_WIDTH + random.randint(50, 250)
                 spawn_y = SCREEN_HEIGHT - GROUND_HEIGHT - enemy_sprite_image.get_height()
 
-                if platforms and random.random() < 0.7:
+                if platforms and random.random() < 0.95:
                     random_platform = random.choice(platforms.sprites())
 
                     potential_platform_y = random_platform.rect.top - enemy_sprite_image.get_height()
@@ -499,8 +499,8 @@ while running:
 
       
 
-        if len(platforms) < 10:
-            generate_platforms(5)
+        if len(platforms) < 20:
+            generate_platforms(10)
 
         if score >= WIN_SCORE:
             current_game_state = GAME_STATE_WON
